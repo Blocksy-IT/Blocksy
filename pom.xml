@@ -6,7 +6,7 @@
 
     <groupId>it.blocksy</groupId>
     <artifactId>Blocksy</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
 
     <name>Blocksy</name>
