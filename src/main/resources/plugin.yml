@@ -1,7 +1,6 @@
 name: Blocksy
 version: "1.1.0"
 main: it.blocksy.Blocksy
-api-version: "1.21"
 authors: [Ph1llyOn_]
 description: Blocksy Vote Plugin - Bridge tra Sito e Votifier
 softdepend: [Votifier, NuVotifier]
