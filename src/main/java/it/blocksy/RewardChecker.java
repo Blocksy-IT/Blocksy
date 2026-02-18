@@ -50,8 +50,22 @@ public class RewardChecker {
     
     private void checkForRewards() {
         try {
-            List<BlocksyReward> rewards = api.fetchRewards(apiKey);
+            // Raccogli lista player online per filtrare i premi dall'API
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!first) sb.append(",");
+                sb.append(p.getName());
+                first = false;
+            }
+            String onlineList = sb.toString();
+            
+            if (onlineList.isEmpty()) return; // Inutile controllare se nessuno è online
+            
+            List<BlocksyReward> rewards = api.fetchRewards(apiKey, onlineList);
             if (rewards.isEmpty()) return;
+            
+            plugin.getLogger().info("Trovati " + rewards.size() + " premi Ruota della Fortuna da riscattare.");
             
             for (BlocksyReward reward : rewards) {
                 processReward(reward);
@@ -65,14 +79,15 @@ public class RewardChecker {
         Bukkit.getScheduler().runTask(plugin, () -> {
             Player player = Bukkit.getPlayer(reward.getUsername());
             if (player != null && player.isOnline()) {
-                String cmd = reward.getCommand().replace("%player%", player.getName());
-                plugin.getLogger().info("Eseguendo premio Ruota della Fortuna per " + player.getName() + ": " + cmd);
+                // Supporta sia %player% (vecchio) che {player} (nuovo docs)
+                String cmd = reward.getCommand()
+                        .replace("%player%", player.getName())
+                        .replace("{player}", player.getName());
+                
+                plugin.getLogger().info("§a[Blocksy] Eseguendo premio per " + player.getName() + ": " + cmd);
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
             } else {
-                // Il player è offline, in Metodo A l'API ha già marcato come 'executed'.
-                // Se volessimo ri-accodare dovremmo gestire il fallimento nell'API.
-                // Per ora assumiamo che il plugin esegua se online o che l'owner gestisca il log.
-                plugin.getLogger().info("Premio Ruota della Fortuna per " + reward.getUsername() + " ignorato (player offline).");
+                plugin.getLogger().warning("§c[Blocksy] Impossibile consegnare premio a " + reward.getUsername() + " (player non più online).");
             }
         });
     }

@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class BlocksyAPI {
     
-    private static final String API_URL = "https://www.blocksy.it/api/vote/fetch";
+    private static final String API_URL = "https://www.blocksy.it/api/vote/fetch_new.php";
     private static final int TIMEOUT = 10000; // 10 secondi
     private final Gson gson;
     
@@ -25,16 +25,14 @@ public class BlocksyAPI {
         this.gson = new Gson();
     }
     
-    /**
-     * Recupera i voti pendenti dall'API
-     * @param apiKey La chiave API del server
-     * @return Lista di voti pendenti
-     */
     public List<BlocksyVote> fetchVotes(String apiKey) {
+        return fetchVotes(apiKey, 0L);
+    }
+    
+    public List<BlocksyVote> fetchVotes(String apiKey, long sinceId) {
         HttpURLConnection connection = null;
         try {
-            // Costruisci URL con parametro apiKey
-            String urlString = API_URL + "?apiKey=" + apiKey;
+            String urlString = API_URL + "?apiKey=" + apiKey + "&sinceId=" + sinceId;
             URL url = new URL(urlString);
             
             // Apri connessione
@@ -77,16 +75,55 @@ public class BlocksyAPI {
             }
         }
     }
+    
+    public long fetchMaxVoteId(String apiKey) {
+        HttpURLConnection connection = null;
+        try {
+            String urlString = API_URL + "?apiKey=" + apiKey + "&sinceId=-1";
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(TIMEOUT);
+            connection.setReadTimeout(TIMEOUT);
+            connection.setRequestProperty("User-Agent", "Blocksy-Plugin/1.0");
+            connection.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode != 200) {
+                return 0L;
+            }
+            
+            String header = connection.getHeaderField("X-Blocksy-MaxId");
+            if (header == null || header.trim().isEmpty()) {
+                return 0L;
+            }
+            try {
+                return Long.parseLong(header.trim());
+            } catch (NumberFormatException e) {
+                return 0L;
+            }
+        } catch (Exception e) {
+            return 0L;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
 
     /**
      * Recupera i premi pendenti (CrazyTime) dall'API
      * @param apiKey La chiave API del server
+     * @param onlinePlayers Lista dei nomi dei player online (separati da virgola)
      * @return Lista di premi pendenti
      */
-    public List<BlocksyReward> fetchRewards(String apiKey) {
+    public List<BlocksyReward> fetchRewards(String apiKey, String onlinePlayers) {
         HttpURLConnection connection = null;
         try {
             String urlString = "https://www.blocksy.it/api_reward_fetch.php?apiKey=" + apiKey;
+            if (onlinePlayers != null && !onlinePlayers.isEmpty()) {
+                urlString += "&onlinePlayers=" + java.net.URLEncoder.encode(onlinePlayers, "UTF-8");
+            }
             URL url = new URL(urlString);
             
             connection = (HttpURLConnection) url.openConnection();

@@ -35,17 +35,22 @@ public class ConfigManager {
      */
     public void reloadConfig() {
         File dataFolder = plugin.getDataFolder();
-        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
-            plugin.getLogger().severe("Impossibile creare la cartella dati di Blocksy: " + dataFolder.getPath());
-            return;
+        if (!dataFolder.exists()) {
+            plugin.getLogger().info("Cartella dati non trovata, creazione in corso: " + dataFolder.getPath());
+            if (!dataFolder.mkdirs()) {
+                plugin.getLogger().severe("✗ Impossibile creare la cartella dati di Blocksy!");
+                return;
+            }
         }
         
         File configFile = new File(dataFolder, "config.yml");
         if (!configFile.exists()) {
+            plugin.getLogger().info("File config.yml non trovato, salvataggio default...");
             plugin.saveDefaultConfig();
         }
         
         plugin.reloadConfig();
         loadConfig();
+        plugin.getLogger().info("✓ Configurazione ricaricata con successo!");
     }
 }
