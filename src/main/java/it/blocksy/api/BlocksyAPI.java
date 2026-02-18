@@ -77,4 +77,41 @@ public class BlocksyAPI {
             }
         }
     }
+
+    /**
+     * Recupera i premi pendenti (CrazyTime) dall'API
+     * @param apiKey La chiave API del server
+     * @return Lista di premi pendenti
+     */
+    public List<BlocksyReward> fetchRewards(String apiKey) {
+        HttpURLConnection connection = null;
+        try {
+            String urlString = "https://www.blocksy.it/api_reward_fetch.php?apiKey=" + apiKey;
+            URL url = new URL(urlString);
+            
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(TIMEOUT);
+            connection.setReadTimeout(TIMEOUT);
+            connection.setRequestProperty("User-Agent", "Blocksy-Plugin/1.0");
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode != 200) return new ArrayList<>();
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) response.append(line);
+            reader.close();
+            
+            Type listType = new TypeToken<List<BlocksyReward>>(){}.getType();
+            List<BlocksyReward> rewards = gson.fromJson(response.toString(), listType);
+            
+            return rewards != null ? rewards : new ArrayList<>();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
 }

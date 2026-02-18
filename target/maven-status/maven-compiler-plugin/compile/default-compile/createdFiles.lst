@@ -1,8 +1,11 @@
-it\blocksy\api\BlocksyVote.class
-it\blocksy\api\UpdateChecker.class
+it\blocksy\RewardChecker.class
 it\blocksy\api\BlocksyAPI.class
 it\blocksy\config\ConfigManager.class
 it\blocksy\VoteChecker.class
-it\blocksy\api\BlocksyAPI$1.class
 it\blocksy\api\UpdateChecker$UpdateNotifyListener.class
+it\blocksy\api\BlocksyAPI$2.class
+it\blocksy\api\BlocksyReward.class
+it\blocksy\api\BlocksyVote.class
+it\blocksy\api\UpdateChecker.class
+it\blocksy\api\BlocksyAPI$1.class
 it\blocksy\Blocksy.class

@@ -8,6 +8,7 @@ public final class Blocksy extends JavaPlugin {
     private static Blocksy instance;
     private ConfigManager configManager;
     private VoteChecker voteChecker;
+    private RewardChecker rewardChecker;
     
     @Override
     public void onEnable() {
@@ -52,10 +53,10 @@ public final class Blocksy extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Ferma il vote checker
-        if (voteChecker != null) {
-            voteChecker.stop();
-        }
+        // Ferma i checker
+        if (voteChecker != null) voteChecker.stop();
+        if (rewardChecker != null) rewardChecker.stop();
+        
         getLogger().info("§cBlocksy Vote Plugin disabilitato!");
     }
     
@@ -81,12 +82,16 @@ public final class Blocksy extends JavaPlugin {
         
         voteChecker = new VoteChecker(this, apiKey, checkInterval);
         voteChecker.start();
+
+        // Avvia anche il sistema di polling premi CrazyTime
+        rewardChecker = new RewardChecker(this, apiKey, checkInterval);
+        rewardChecker.start();
     }
     
     public void reloadPolling() {
-        if (voteChecker != null) {
-            voteChecker.stop();
-        }
+        if (voteChecker != null) voteChecker.stop();
+        if (rewardChecker != null) rewardChecker.stop();
+        
         configManager.reloadConfig();
         startVotePolling();
     }
