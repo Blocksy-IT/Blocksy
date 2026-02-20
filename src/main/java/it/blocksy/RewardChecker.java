@@ -19,6 +19,8 @@ public class RewardChecker {
     private final int checkInterval;
     private BukkitTask task;
     private boolean running;
+    private String lastError = null;
+    private int consecutiveErrors = 0;
     
     public RewardChecker(Blocksy plugin, String apiKey, int checkInterval) {
         this.plugin = plugin;
@@ -63,6 +65,7 @@ public class RewardChecker {
             if (onlineList.isEmpty()) return; // Inutile controllare se nessuno è online
             
             List<BlocksyReward> rewards = api.fetchRewards(apiKey, onlineList);
+            resetErrors();
             if (rewards.isEmpty()) return;
             
             plugin.getLogger().info("Trovati " + rewards.size() + " premi Ruota della Fortuna da riscattare.");
@@ -71,7 +74,22 @@ public class RewardChecker {
                 processReward(reward);
             }
         } catch (Exception e) {
-            plugin.getLogger().warning("Errore nel controllo premi: " + e.getMessage());
+            String currentError = e.getMessage();
+            if (currentError == null) currentError = e.getClass().getName();
+            
+            if (!currentError.equals(lastError) || consecutiveErrors % 10 == 0) {
+                plugin.getLogger().warning("Errore nel controllo premi: " + currentError + (consecutiveErrors > 0 ? " (consecutivi: " + consecutiveErrors + ")" : ""));
+                lastError = currentError;
+            }
+            consecutiveErrors++;
+        }
+    }
+    
+    private void resetErrors() {
+        if (consecutiveErrors > 0) {
+            plugin.getLogger().info("Connessione API (Premi) ripristinata con successo dopo " + consecutiveErrors + " errori.");
+            consecutiveErrors = 0;
+            lastError = null;
         }
     }
     

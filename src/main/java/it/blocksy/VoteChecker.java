@@ -21,8 +21,8 @@ public class VoteChecker {
     private final int checkInterval;
     private BukkitTask task;
     private boolean running;
-    private long lastVoteId;
-    private final java.io.File stateFile;
+    private String lastError = null;
+    private int consecutiveErrors = 0;
     
     public VoteChecker(Blocksy plugin, String apiKey, int checkInterval) {
         this.plugin = plugin;
@@ -30,13 +30,6 @@ public class VoteChecker {
         this.apiKey = apiKey;
         this.checkInterval = checkInterval;
         this.running = false;
-        this.stateFile = new java.io.File(plugin.getDataFolder(), "votes_state.txt");
-        long stored = loadLastVoteId();
-        if (stored > 0L) {
-            this.lastVoteId = stored;
-        } else {
-            this.lastVoteId = api.fetchMaxVoteId(apiKey);
-        }
     }
     
     /**
@@ -95,25 +88,44 @@ public class VoteChecker {
      */
     private void checkForVotes() {
         try {
-            List<BlocksyVote> votes = api.fetchVotes(apiKey, lastVoteId);
+            // Recupera voti dall'API
+            List<BlocksyVote> votes = api.fetchVotes(apiKey);
             
             if (votes.isEmpty()) {
+                resetErrors();
                 return; // Nessun voto pendente
             }
             
+            resetErrors();
+            
             plugin.getLogger().info("Trovati " + votes.size() + " voti pendenti");
             
+            // Processa ogni voto
             for (BlocksyVote vote : votes) {
                 processVote(vote);
-                if (vote.getId() > lastVoteId) {
-                    lastVoteId = vote.getId();
-                }
             }
             
-            saveLastVoteId();
-            
         } catch (Exception e) {
-            plugin.getLogger().warning("Errore nel controllo voti: " + e.getMessage());
+            String currentError = e.getMessage();
+            if (currentError == null) currentError = e.getClass().getName();
+            
+            // Logga l'errore solo se è diverso dal precedente o ogni 10 volte
+            if (!currentError.equals(lastError) || consecutiveErrors % 10 == 0) {
+                plugin.getLogger().warning("Errore nel controllo voti: " + currentError + (consecutiveErrors > 0 ? " (consecutivi: " + consecutiveErrors + ")" : ""));
+                lastError = currentError;
+            }
+            consecutiveErrors++;
+        }
+    }
+    
+    /**
+     * Resetta lo stato degli errori dopo un successo
+     */
+    private void resetErrors() {
+        if (consecutiveErrors > 0) {
+            plugin.getLogger().info("Connessione API ripristinata con successo dopo " + consecutiveErrors + " errori.");
+            consecutiveErrors = 0;
+            lastError = null;
         }
     }
     
@@ -157,33 +169,6 @@ public class VoteChecker {
             
         } catch (Exception e) {
             plugin.getLogger().severe("Errore nel processare voto ID " + vote.getId() + ": " + e.getMessage());
-        }
-    }
-    
-    private long loadLastVoteId() {
-        if (!stateFile.exists()) {
-            return 0L;
-        }
-        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(stateFile))) {
-            String line = reader.readLine();
-            if (line == null) {
-                return 0L;
-            }
-            return Long.parseLong(line.trim());
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
-    
-    private void saveLastVoteId() {
-        try {
-            if (!stateFile.getParentFile().exists()) {
-                stateFile.getParentFile().mkdirs();
-            }
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(stateFile, false))) {
-                writer.println(Long.toString(lastVoteId));
-            }
-        } catch (Exception e) {
         }
     }
     

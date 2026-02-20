@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class BlocksyAPI {
     
-    private static final String API_URL = "https://www.blocksy.it/api/vote/fetch_new.php";
+    private static final String API_URL = "https://www.blocksy.it/api/vote/fetch";
     private static final int TIMEOUT = 10000; // 10 secondi
     private final Gson gson;
     
@@ -25,14 +25,16 @@ public class BlocksyAPI {
         this.gson = new Gson();
     }
     
+    /**
+     * Recupera i voti pendenti dall'API
+     * @param apiKey La chiave API del server
+     * @return Lista di voti pendenti
+     */
     public List<BlocksyVote> fetchVotes(String apiKey) {
-        return fetchVotes(apiKey, 0L);
-    }
-    
-    public List<BlocksyVote> fetchVotes(String apiKey, long sinceId) {
         HttpURLConnection connection = null;
         try {
-            String urlString = API_URL + "?apiKey=" + apiKey + "&sinceId=" + sinceId;
+            // Costruisci URL con parametro apiKey
+            String urlString = API_URL + "?apiKey=" + apiKey;
             URL url = new URL(urlString);
             
             // Apri connessione
@@ -67,43 +69,7 @@ public class BlocksyAPI {
             return votes != null ? votes : new ArrayList<>();
             
         } catch (Exception e) {
-            System.err.println("Errore nel recupero voti: " + e.getMessage());
             return new ArrayList<>();
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-    
-    public long fetchMaxVoteId(String apiKey) {
-        HttpURLConnection connection = null;
-        try {
-            String urlString = API_URL + "?apiKey=" + apiKey + "&sinceId=-1";
-            URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(TIMEOUT);
-            connection.setReadTimeout(TIMEOUT);
-            connection.setRequestProperty("User-Agent", "Blocksy-Plugin/1.0");
-            connection.setRequestProperty("Accept", "application/json");
-            
-            int responseCode = connection.getResponseCode();
-            if (responseCode != 200) {
-                return 0L;
-            }
-            
-            String header = connection.getHeaderField("X-Blocksy-MaxId");
-            if (header == null || header.trim().isEmpty()) {
-                return 0L;
-            }
-            try {
-                return Long.parseLong(header.trim());
-            } catch (NumberFormatException e) {
-                return 0L;
-            }
-        } catch (Exception e) {
-            return 0L;
         } finally {
             if (connection != null) {
                 connection.disconnect();
