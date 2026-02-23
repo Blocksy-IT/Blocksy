@@ -9,6 +9,7 @@ public class ConfigManager {
     
     private final Blocksy plugin;
     private String apiKey;
+    private String backendId;
     private int checkInterval;
     
     public ConfigManager(Blocksy plugin) {
@@ -19,11 +20,16 @@ public class ConfigManager {
         FileConfiguration config = plugin.getConfig();
         
         this.apiKey = config.getString("api-key", "");
+        this.backendId = config.getString("backend-id", "");
         this.checkInterval = config.getInt("check-interval", 5);
     }
     
     public String getApiKey() {
         return apiKey;
+    }
+    
+    public String getBackendId() {
+        return backendId;
     }
     
     public int getCheckInterval() {

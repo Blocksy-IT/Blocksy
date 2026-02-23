@@ -1,5 +1,5 @@
 name: Blocksy
-version: "2.0.2"
+version: "2.2.0"
 main: it.blocksy.Blocksy
 authors: [Ph1llyOn_]
 description: Blocksy Vote Plugin - Bridge tra Sito e Votifier

@@ -64,8 +64,13 @@ public final class Blocksy extends JavaPlugin {
      * Avvia il sistema di polling voti dall'API
      */
     private void startVotePolling() {
-        String apiKey = getConfig().getString("api-key", "");
-        int checkInterval = getConfig().getInt("check-interval", 5);
+        String apiKey = configManager.getApiKey();
+        String backendId = configManager.getBackendId();
+        int checkInterval = configManager.getCheckInterval();
+        
+        if (backendId == null || backendId.trim().isEmpty()) {
+            backendId = getServer().getName();
+        }
         
         if (apiKey.isEmpty()) {
             getLogger().warning("§c===========================================");
@@ -78,9 +83,10 @@ public final class Blocksy extends JavaPlugin {
         
         getLogger().info("§eAvvio sistema di polling voti...");
         getLogger().info("§eAPI Key: " + apiKey.substring(0, Math.min(8, apiKey.length())) + "...");
+        getLogger().info("§eBackend ID: " + backendId);
         getLogger().info("§eIntervallo controllo: " + checkInterval + " secondi");
         
-        voteChecker = new VoteChecker(this, apiKey, checkInterval);
+        voteChecker = new VoteChecker(this, apiKey, backendId, checkInterval);
         voteChecker.start();
 
         // Avvia anche il sistema di polling premi CrazyTime

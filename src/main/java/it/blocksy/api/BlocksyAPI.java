@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,13 +29,25 @@ public class BlocksyAPI {
     /**
      * Recupera i voti pendenti dall'API
      * @param apiKey La chiave API del server
+     * @param backendId Identificatore univoco di questo backend
      * @return Lista di voti pendenti
      */
-    public List<BlocksyVote> fetchVotes(String apiKey) {
+    public List<BlocksyVote> fetchVotes(String apiKey, String backendId) {
         HttpURLConnection connection = null;
         try {
-            // Costruisci URL con parametro apiKey
-            String urlString = API_URL + "?apiKey=" + apiKey;
+            // Costruisci URL con parametri apiKey e backendId (se presente)
+            StringBuilder urlBuilder = new StringBuilder(API_URL)
+                    .append("?apiKey=").append(apiKey);
+            
+            if (backendId != null) {
+                String trimmed = backendId.trim();
+                if (!trimmed.isEmpty()) {
+                    urlBuilder.append("&backendId=")
+                              .append(URLEncoder.encode(trimmed, "UTF-8"));
+                }
+            }
+            
+            String urlString = urlBuilder.toString();
             URL url = new URL(urlString);
             
             // Apri connessione

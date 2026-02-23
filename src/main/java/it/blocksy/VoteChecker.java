@@ -18,16 +18,18 @@ public class VoteChecker {
     private final Blocksy plugin;
     private final BlocksyAPI api;
     private final String apiKey;
+    private final String backendId;
     private final int checkInterval;
     private BukkitTask task;
     private boolean running;
     private String lastError = null;
     private int consecutiveErrors = 0;
     
-    public VoteChecker(Blocksy plugin, String apiKey, int checkInterval) {
+    public VoteChecker(Blocksy plugin, String apiKey, String backendId, int checkInterval) {
         this.plugin = plugin;
         this.api = new BlocksyAPI();
         this.apiKey = apiKey;
+        this.backendId = backendId;
         this.checkInterval = checkInterval;
         this.running = false;
     }
@@ -88,8 +90,8 @@ public class VoteChecker {
      */
     private void checkForVotes() {
         try {
-            // Recupera voti dall'API
-            List<BlocksyVote> votes = api.fetchVotes(apiKey);
+            // Recupera voti dall'API per questo backend
+            List<BlocksyVote> votes = api.fetchVotes(apiKey, backendId);
             
             if (votes.isEmpty()) {
                 resetErrors();
