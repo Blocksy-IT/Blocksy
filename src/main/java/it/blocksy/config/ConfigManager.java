@@ -12,6 +12,8 @@ public class ConfigManager {
     private String backendId;
     private int checkInterval;
     
+    private String eventEndMessage;
+    
     public ConfigManager(Blocksy plugin) {
         this.plugin = plugin;
     }
@@ -22,6 +24,11 @@ public class ConfigManager {
         this.apiKey = config.getString("api-key", "");
         this.backendId = config.getString("backend-id", "");
         this.checkInterval = config.getInt("check-interval", 5);
+        this.eventEndMessage = config.getString("messages.event-end", "§9§lBlocksy §r-> L'evento è terminato! Codice segreto: §e§l%code%");
+    }
+    
+    public String getEventEndMessage() {
+        return eventEndMessage;
     }
     
     public String getApiKey() {

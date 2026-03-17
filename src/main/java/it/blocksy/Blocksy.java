@@ -26,19 +26,45 @@ public final class Blocksy extends JavaPlugin {
         
         // Registra comandi
         if (getCommand("blocksy") != null) {
+            getCommand("blocksy").setTabCompleter(new BlocksyTabCompleter());
             getCommand("blocksy").setExecutor((sender, command, label, args) -> {
                 if (!sender.hasPermission("blocksy.admin")) {
                     sender.sendMessage("§cNon hai i permessi per usare questo comando.");
                     return true;
                 }
                 
-                if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-                    reloadPolling();
-                    sender.sendMessage("§a[Blocksy] Configurazione ricaricata e polling riavviato!");
-                    return true;
+                if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("reload")) {
+                        reloadPolling();
+                        sender.sendMessage("§a[Blocksy] Configurazione ricaricata e polling riavviato!");
+                        return true;
+                    }
+                    
+                    if (args[0].equalsIgnoreCase("endevent")) {
+                        // Genera codice a 4 cifre casuale
+                        int code = 1000 + (int)(Math.random() * 9000);
+                        String codeStr = String.valueOf(code);
+
+                        // Invia al sito
+                        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                            it.blocksy.api.BlocksyAPI apiClient = new it.blocksy.api.BlocksyAPI();
+                            boolean success = apiClient.endEvent(configManager.getApiKey(), codeStr);
+                            
+                            getServer().getScheduler().runTask(this, () -> {
+                                if (success) {
+                                    String msg = configManager.getEventEndMessage().replace("%code%", codeStr).replace("&", "§");
+                                    getServer().broadcastMessage(msg);
+                                    // Rimosso sender.sendMessage per evitare "doppio messaggio" all'admin che vede già il broadcast
+                                } else {
+                                    sender.sendMessage("§c[Blocksy] Errore durante la chiusura dell'evento sul sito. Verifica i log o l'API Key.");
+                                }
+                            });
+                        });
+                        return true;
+                    }
                 }
                 
-                sender.sendMessage("§eUso: /blocksy reload");
+                sender.sendMessage("§eUso: /blocksy <reload|endevent>");
                 return true;
             });
         }
@@ -90,7 +116,7 @@ public final class Blocksy extends JavaPlugin {
         voteChecker.start();
 
         // Avvia anche il sistema di polling premi CrazyTime
-        rewardChecker = new RewardChecker(this, apiKey, checkInterval);
+        rewardChecker = new RewardChecker(this, apiKey, backendId, checkInterval);
         rewardChecker.start();
     }
     

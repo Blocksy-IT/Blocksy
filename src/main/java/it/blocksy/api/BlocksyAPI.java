@@ -96,12 +96,15 @@ public class BlocksyAPI {
      * @param onlinePlayers Lista dei nomi dei player online (separati da virgola)
      * @return Lista di premi pendenti
      */
-    public List<BlocksyReward> fetchRewards(String apiKey, String onlinePlayers) {
+    public List<BlocksyReward> fetchRewards(String apiKey, String onlinePlayers, String mode) {
         HttpURLConnection connection = null;
         try {
             String urlString = "https://www.blocksy.it/api_reward_fetch.php?apiKey=" + apiKey;
             if (onlinePlayers != null && !onlinePlayers.isEmpty()) {
                 urlString += "&onlinePlayers=" + java.net.URLEncoder.encode(onlinePlayers, "UTF-8");
+            }
+            if (mode != null && !mode.isEmpty()) {
+                urlString += "&mode=" + java.net.URLEncoder.encode(mode, "UTF-8");
             }
             URL url = new URL(urlString);
             
@@ -126,6 +129,42 @@ public class BlocksyAPI {
             return rewards != null ? rewards : new ArrayList<>();
         } catch (Exception e) {
             return new ArrayList<>();
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    /**
+     * Termina l'evento corrente sul sito
+     * @param apiKey La chiave API del server
+     * @param code Il codice segreto dell'evento
+     * @return true se l'operazione ha avuto successo
+     */
+    public boolean endEvent(String apiKey, String code) {
+        HttpURLConnection connection = null;
+        try {
+            String urlString = "https://www.blocksy.it/api_event_end.php?apiKey=" + apiKey + "&code=" + code;
+            URL url = new URL(urlString);
+            
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(TIMEOUT);
+            connection.setReadTimeout(TIMEOUT);
+            connection.setRequestProperty("User-Agent", "Blocksy-Plugin/1.0");
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode != 200) return false;
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) response.append(line);
+            reader.close();
+            
+            // Un semplice controllo se contiene "success":true
+            return response.toString().contains("\"success\":true");
+        } catch (Exception e) {
+            return false;
         } finally {
             if (connection != null) connection.disconnect();
         }

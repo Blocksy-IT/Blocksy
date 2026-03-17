@@ -16,16 +16,18 @@ public class RewardChecker {
     private final Blocksy plugin;
     private final BlocksyAPI api;
     private final String apiKey;
+    private final String backendId;
     private final int checkInterval;
-    private BukkitTask task;
+    private org.bukkit.scheduler.BukkitTask task;
     private boolean running;
     private String lastError = null;
     private int consecutiveErrors = 0;
     
-    public RewardChecker(Blocksy plugin, String apiKey, int checkInterval) {
+    public RewardChecker(Blocksy plugin, String apiKey, String backendId, int checkInterval) {
         this.plugin = plugin;
         this.api = new BlocksyAPI();
         this.apiKey = apiKey;
+        this.backendId = backendId;
         this.checkInterval = checkInterval;
         this.running = false;
     }
@@ -64,7 +66,7 @@ public class RewardChecker {
             
             if (onlineList.isEmpty()) return; // Inutile controllare se nessuno è online
             
-            List<BlocksyReward> rewards = api.fetchRewards(apiKey, onlineList);
+            List<BlocksyReward> rewards = api.fetchRewards(apiKey, onlineList, backendId);
             resetErrors();
             if (rewards.isEmpty()) return;
             
